@@ -1,7 +1,7 @@
 package Class::DBI::Sweet::Pie;
 use strict;
 use vars qw/$VERSION/;
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 sub import {
     my $class = shift;
@@ -33,6 +33,9 @@ __SQL__
 	my $class = ref $self || $self;
 	my ($criteria, $attributes) = $class->_search_args(@_);
 
+	$aggregate_column =~ s/^ (distinct) \s+ //ix;
+	my $distinct = $1 || '';
+
 	if ($aggregate_column eq "*") {
 	    ;
 	}
@@ -54,6 +57,8 @@ __SQL__
 	else {
 	    $aggregate_column = "me.$aggregate_column";
 	}
+
+	$aggregate_column = "$distinct $aggregate_column" if $distinct;
 
 	# make sure we take copy of $attribues since it can be reused
 	my $agfunc_attr = { %{$attributes} };
@@ -85,6 +90,9 @@ __SQL__
 	my $aggregate_column = shift;
 	my ($criteria, $attributes) = $class->_search_args(@_);
 
+	$aggregate_column =~ s/^ (distinct) \s+ //ix;
+	my $distinct = $1 || '';
+
 	if ($aggregate_column eq "*") {
 	    ;
 	}
@@ -99,6 +107,8 @@ __SQL__
 	    $aggregate_column = "me.$aggregate_column";
 	}
 
+	$aggregate_column = "$distinct $aggregate_column" if $distinct;
+
 	my ($sql_parts, $classes, $columns, $values) = $class->_search( $criteria, $attributes );
 
 	my $sth = $class->$sql_with_aggregate( $aggregate_column, @{$sql_parts}{qw/ from where order_by limit /} );
@@ -112,7 +122,7 @@ __END__
 
 =head1 NAME
 
-Class::DBI::Sweet::Pie - create aggregate function for Class::DBI::Sweet
+Class::DBI::Sweet::Pie - aggregate function for Class::DBI::Sweet
 
 =head1 SYNOPSYS
 
